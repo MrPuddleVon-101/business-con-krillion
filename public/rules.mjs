@@ -4,14 +4,14 @@ export const TIERS = {
   schooler: { name: 'Schooler', score: 30, emoji: '🐟', color: '#4de3ff', blurb: 'Solid — swims with the school.' },
   rare: { name: 'Rare', score: 60, emoji: '🦑', color: '#ff5252', blurb: 'An uncommon answer. Nice pull.' },
   deepcut: { name: 'Deep Cut', score: 85, emoji: '🏮', color: '#9d7bff', blurb: 'True obscurity. Few go this deep.' },
-  krillion: { name: 'One in a Krillion', score: 100, emoji: '🌟', color: '#ffd166', blurb: 'The designated gem. Trench floor.' },
+  krillion: { name: '1 in a Krillion', score: 100, emoji: '🌟', color: '#ffd166', blurb: 'The designated gem. Trench floor.' },
 };
 export const BANDS = [
   { min: 0, max: 150, tier: 'plankton', name: 'Plankton', text: 'Plenty of ocean left down there.' },
   { min: 151, max: 250, tier: 'schooler', name: 'Schooler', text: 'Swimming with the school.' },
   { min: 251, max: 350, tier: 'rare', name: 'Rare', text: 'Below the thermocline. Nice.' },
   { min: 351, max: 449, tier: 'deepcut', name: 'Deep cut', text: 'Seriously deep dive.' },
-  { min: 450, max: 700, tier: 'krillion', name: 'One in a krillion', text: 'Trench dweller. Absurd.' },
+  { min: 450, max: 700, tier: 'krillion', name: '1 in a krillion', text: 'Trench dweller. Absurd.' },
 ];
 export const ROUND_MS = 25000;
 export const PREVIEW_MS = 3000;

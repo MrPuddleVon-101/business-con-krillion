@@ -1,10 +1,13 @@
 {
-  "name": "openkrillion",
+  "name": "business-con-krillion",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "start": "node scripts/build-static.mjs && node scripts/serve.mjs",
+    "build:static": "node scripts/build-static.mjs",
+    "test:campaign": "node --test tests/campaign.test.mjs",
     "dev": "wrangler dev --port 3051",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",

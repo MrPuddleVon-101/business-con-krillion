@@ -11,7 +11,7 @@ export class Ocean {
     this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.mascot=mascot;
     this.scenery=new Seascape();this.phase='intro';this.depth=0;this.target=0;this.cameraDepth=-45;this.cameraTarget=-45;this.active=0;this.targetActive=0;this.time=0;this.particles=[];this.fx=null;
     this.lowPower=false;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.last=0;this.mx=.72;this.my=.66;
-    this.sprites={};for(const name of ['krill','krill-gold','schooler','rare','deepcut','tooclever']){const img=new Image();img.src='/assets/'+name+'.svg';this.sprites[name]=img;}
+    this.sprites={};for(const name of ['krill','krill-gold','schooler','rare','deepcut','tooclever']){const img=new Image();img.src='assets/'+name+'.svg';this.sprites[name]=img;}
     this.resize();this.observer=new ResizeObserver(()=>this.resize());this.observer.observe(canvas);requestAnimationFrame(t=>this.tick(t));
   }
   layout(){const mobile=this.w<700,rail=this.w>=1200?180:0,bottom=mobile?50:90;return{mobile,rail,bottom,height:this.h-bottom,left:rail,width:this.w-rail*2,center:this.w/2-24};}

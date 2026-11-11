@@ -8,3 +8,5 @@ wrangler.production.jsonc
 output/
 private/
 .DS_Store
+dist/
+.claude/

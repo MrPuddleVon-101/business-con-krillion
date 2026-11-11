@@ -1,88 +1,97 @@
-# OpenKrillion 🦐
+# Business Con × Krillion
 
-An independent, open-source daily rare-answer trivia game. Play at **[openkrillion.com](https://openkrillion.com)**.
+A three-question Krillion dive built for the Business Con Instagram Reel. It plays like an ordinary Krillion game until someone types **Business Con**. That answer sinks all the way to the trench floor and lands as **1 IN A KRILLION**. After question 3 the player surfaces onto the Business Con end screen.
 
-Seven prompts, 25 seconds each. Familiar answers float; rare answers descend. This release includes the home scene, all seven rounds, answer correction and rejection, six rarity tiers, animated descent, synthesized audio, surfacing, results, answer review, sharing, practice, settings, dive buddies, and a browser logbook.
+It's a fork of [OpenKrillion](https://github.com/VulcanEon/openkrillion.com-service) (MIT, see `LICENSE`). The original ocean, pixel art, sounds, tier ladder, timer and landing animations are unchanged. Only the question source, round count and ending are different.
 
-**Source:** [openkrillion.com-service](https://github.com/VulcanEon/openkrillion.com-service). Application code and original procedural assets are MIT licensed. This project is independent of, and not affiliated with, [krillion.io](https://krillion.io). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the separate treatment of reference data, fonts, and provider icons.
+## Run it locally
 
-## Run locally
+You need Node.js 24 or newer. Nothing else: there's no `npm install`, no API keys and no database.
 
-Use Node.js 24 or newer and npm. No cloud account, API key, AI model, or production database is needed for the sample game.
-
-```sh
-git clone https://github.com/VulcanEon/openkrillion.com-service.git
-cd openkrillion.com-service
-npm ci
-npm run build
-npm run db:local
-npm run dev
+```bash
+npm start
 ```
 
-Open `http://localhost:3051`. Wrangler runs a local Worker, SQLite-backed D1, and local R2 emulation. Their data stays in the ignored `.wrangler/` folder. The zero database identifier in `wrangler.jsonc` is deliberately a placeholder; local development works with it.
+Then open http://localhost:4173. This builds `dist/` and serves it. To use a different port, run `node scripts/serve.mjs 8080`.
 
-The included independent sample bank is small and visibly labeled. Production can synchronize the current reference day's publicly exposed prompts and prepared answer tiers; these snapshots and production player records are **not** distributed with this repository. No player answers are sent to the reference service. If the reference is unavailable for a new day, a labeled sample bank keeps the game playable. This dependency can be disabled with `REFERENCE_SYNC=false`.
+Run the tests:
 
-## Architecture
-
-```text
-Browser: canvas ocean + HTML game + Web Audio
-                 |
-                 v
-Cloudflare Worker: server timing, matching, scoring, ownership
-       |                       |
-       v                       v
- D1 / local SQLite        private R2
- puzzles, runs, answers    snapshots + public asset namespace
+```bash
+node --test tests/campaign.test.mjs
 ```
 
-The server owns the score and round deadline. The essential `ok_player` cookie is HttpOnly, SameSite=Lax, and Secure over HTTPS. Answers are hidden until the dive is completed. Daily results and practice are separate; population comparisons use this service's completed daily dives, not the original game's player statistics. A small timed-submission network grace period does not allow late manual requests to revive a round.
+## Recording the Reel
 
-`src/config.mjs` holds public product facts. The Worker renders `/llms.txt`, `/pricing.md`, `/models.md`, and `/llms-full.txt` from those same facts; `npm run build` also generates matching checked-in documentation snapshots. There are no AI models, paid plans, credits, subscriptions, account login, or multiplayer in this release.
+- Use your phone, or a desktop browser in device mode at **390 × 844** (9:16). Every screen was checked at that size.
+- Turn sound on with the speaker button. Audio starts on the first tap.
+- **☰ → Restart from prompt 1** reloads to the start screen. **↺ PLAY AGAIN** on the end screen jumps straight to question 1.
+- Each landing screen stays up until you tap **DESCEND**, so you choose how long viewers get to read the result.
+- Each question has a 25-second answer timer. You can change it in the config.
 
-The homepage includes a native, accessible expandable guide with over 1,500 English words. Its content is delivered in the initial HTML to every visitor. English and Chinese help/AI prompts are available through `?lang=en` and `?lang=zh`; game questions and the long reference guide currently remain English. Five local brand icons open public product questions in ChatGPT, Claude, Perplexity, Google AI Mode, and Grok. Opening a provider link does not guarantee its answer or a citation.
+## Changing questions, answers and the end screen
 
-## Deploy your own copy
+Everything is in **`public/campaign.config.mjs`**. After editing, run `npm start` again (or just push, if you use GitHub Pages).
 
-1. Run `npx wrangler login` in your own Cloudflare account.
-2. Create resources: `npx wrangler d1 create YOUR_DATABASE` and `npx wrangler r2 bucket create YOUR_BUCKET`.
-3. Copy `wrangler.jsonc` to the ignored `wrangler.production.jsonc`. Set a unique Worker name, your database ID/name, bucket name, account ID, and `SITE_URL`. Set `LOCAL_DEVELOPMENT=false`.
-4. Add your custom domain, or a zone route such as `example.com/*` when that host already has proxied DNS records. Keep a `www` redirect if used. Set `workers_dev` as desired.
-5. Update `src/config.mjs`, canonical URLs in `src/worker.mjs`, and public brand/guide copy for your own domain. The supplied code describes the deployed OpenKrillion site.
-6. Optional runtime variables: `GA4_ID`, `CLARITY_ID`, `BING_VERIFY`, `GSC_VERIFY`. The supplied production Plausible public script URL is in `src/config.mjs`; replace it with your own site's script. Analytics only load on the configured production hostname, are disabled for automated browser runs, and never receive raw answers through custom events.
-7. Apply migrations and publish:
+| What | Where in the config |
+|---|---|
+| Question wording and order | `QUESTIONS[].text` |
+| Ordinary answers and their tiers | `QUESTIONS[].answers`, written as `a('Answer', 'tier', ['aliases'])` |
+| The special answer, its aliases and quip | `SPECIAL_ANSWER` (shared by all three questions through `special:`) |
+| Answers not in the bank | `GAME.unlisted.tier`: currently `'schooler'` (30 pts). Set it to `null` to reject them the way the original game does ("no echo. try again"). |
+| Timer and countdown | `GAME.answerSeconds`, `GAME.previewSeconds` |
+| Start screen title, tab title, dive number | `GAME.title`, `GAME.pageTitle`, `GAME.diveNumber` |
+| End screen | `END_SCREEN`: `eventName`, `date`, `venue`, `tagline`, `statusLead`, `status`, `details`, `logo`, `registrationUrl`, `registrationLabel`, `qrCode`, `replayLabel` |
 
-```sh
-npm run db:remote
-npm run deploy
-```
+Tiers, from lowest to highest: `plankton` 10 · `tooclever` 15 · `schooler` 30 · `rare` 60 · `deepcut` 85 · `krillion` 100. The `krillion` tier displays as **1 IN A KRILLION** and is reserved for the special answer.
 
-To enable reference synchronization, set `REFERENCE_SYNC=true`; the first request for a new day can synchronize and cache its validated snapshot. Optional cron entries `5 4 * * *` and `5 5 * * *` cover New York midnight in both DST seasons. The date validator prevents mixing prompts and answer lists from different days.
+**Adding the logo or QR code:** put the image in `public/assets/`, for example `public/assets/business-con-logo.png`. Then set `logo: 'assets/business-con-logo.png'` (or `qrCode: 'assets/qr.png'`). An empty field is simply left off the end screen. No event date or registration link has been filled in yet.
 
-For an optional authenticated manual refresh, set `ADMIN_TOKEN` using `npx wrangler secret put ADMIN_TOKEN --config wrangler.production.jsonc`, then POST `/api/admin/sync` with its Bearer token. This endpoint is unavailable when the secret is unset. Never commit tokens, `.dev.vars`, production binding configuration, SQLite files, or bucket dumps.
+**Special-answer matching** ignores case, spaces, hyphens and punctuation. `Business Con`, `business con`, `BUSINESS CON`, `BusinessCon`, `business-con` and ` BUSINESS CON ` all match exactly. A near-miss typo like `Busness Con` gets the original game's "corrects to Business Con, submit again to confirm" prompt.
 
-The R2 bucket remains private. Only objects under `assets/` can be served through `/media/assets/...`; puzzle snapshots are not exposed by that route. The build supplies static OG/favicon assets. If using R2 for a share image, upload `public/assets/og.png` to your bucket's `assets/og.png` key with `Content-Type: image/png`.
+## Deploying publicly (GitHub Pages)
 
-## Validation
+1. Create a new **empty** GitHub repository under your own account.
+2. Point this folder at it and push:
+   ```bash
+   git remote set-url origin https://github.com/YOUR-USERNAME/YOUR-REPO.git
+   ```
+   ```bash
+   git add -A && git commit -m "Business Con × Krillion" && git push -u origin main
+   ```
+3. On GitHub, go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
+4. The included workflow (`.github/workflows/pages.yml`) runs the tests, builds `dist/` and publishes it. The site appears at `https://YOUR-USERNAME.github.io/YOUR-REPO/`. All paths are relative, so it works from a subfolder.
 
-```sh
-npm test
-npm run build
-npm run check
-node scripts/browser-audit.mjs http://localhost:3051 output/playwright/audit
-npm run test:audio
-npm run test:mobile
-npm run test:art
-```
+Any static host also works: upload the contents of `dist/` to Netlify Drop, Vercel or Cloudflare Pages.
 
-The art audit samples five depth zones and all six outcome effects on desktop and mobile. Companion SVGs are generated from original pixel geometry in `scripts/pixel-art.mjs`; scenery is drawn and cached by `public/seascape.mjs`, without downloading any reference artwork at build or runtime. The mobile flow audit runs all seven rounds at 390×844 and checks a long question at 390×480 before restoring the viewport. The audio audit renders synthesized cues through OfflineAudioContext, checks envelopes, clipping, mute and countdown timing, and writes WAV samples under ignored `output/audio/`. The visual fidelity pass and remaining differences are recorded in [docs/fidelity-audit.md](docs/fidelity-audit.md).
+## What changed from OpenKrillion
 
-The unit/integration suite runs against an in-memory SQLite D1 adapter, including seven-round server scoring, duplicate protection, ownership, CSRF checks, deadline expiry, pause/resume, reference validation, DST rollover, and the documentation/SEO contract. Browser validation uses installed Google Chrome (`channel: chrome`) and covers desktop/mobile, correction/rejection, seven rounds, results/review/share, reload, Chinese AI prompts, and a short mobile viewport. Install Chrome or change the browser channel for your environment. Production browser audits use practice mode to avoid contaminating daily population statistics.
+- **`public/campaign.config.mjs` (new):** the single place for questions, answer banks, the special answer, timing and end-screen content.
+- **`public/local-api.mjs` (new):** an in-browser version of the Worker API (`today`, `start`, `next`, `answer`, `pause`, `review`). It keeps the original matching, fuzzy correction, rejection and tier scoring. It reads from the config instead of D1, so the game needs no server and runs as static files.
+- **`public/app.mjs`:** calls the local API instead of `fetch`, uses the config's round count and timer instead of a hardcoded 7, marks special landings with a `special-answer` class, and replaces the results page with the Business Con end screen (round recap → BUSINESS CON '27 @ SJII → tagline → "Be there or BE SQUARE" → play again). It also adds a Restart menu action.
+- **`public/rules.mjs`:** the top tier is now named "1 in a Krillion".
+- **`public/campaign.css` (new):** a larger, gold, pulsing "1 IN A KRILLION" for the special landing, positioned below the gold krill so they don't overlap, plus the end-screen styles. It reuses the original palette and VT323 pixel font.
+- **`src/campaign-page.mjs` + `scripts/build-static.mjs` + `scripts/serve.mjs` (new):** build and serve the static page. This page drops the SEO guide, AI-docs links, analytics and footer links so nothing distracts on camera, and it shows no Business Con branding before the end.
+- Asset paths are now relative (`assets/…`), so the build works on GitHub Pages.
+- The Cloudflare Worker (`src/worker.mjs`), its tests and the original README (`README.openkrillion.md`) are still there but aren't needed for the campaign build.
 
-Run artifacts are generated under ignored `output/`. `render_game_to_text()` exposes readable UI state; `advanceTime(ms)` is available only in local development for animation checks. Production timers use server deadlines.
+## Testing performed
 
-## Project scope and fidelity
+- `tests/campaign.test.mjs` checks the exact wording and order of the three questions. It checks that every listed variation of Business Con is 1 IN A KRILLION on every question with no correction prompt, and that ordinary answers keep normal tiers and are never special. It plays three full runs of special answers (300 pts, completed, restart lands on round 1) and one mixed run. All 4 pass.
+- The original 14 OpenKrillion tests still pass (`npm test`).
+- In a real browser at 390 × 844 (mobile). At desktop size, only the question screen was checked.
+  - Q1 "Business Con" → 1 IN A KRILLION
+  - Q1 "Football" → PLANKTON
+  - Q2 "businesscon" and "business-con" → 1 IN A KRILLION
+  - Q2 "LinkedIn" → PLANKTON
+  - Q3 " BUSINESS CON " → 1 IN A KRILLION
+  - The end screen shows the recap and the Business Con reveal
+  - PLAY AGAIN goes back to question 1
+  - Nothing is cropped
+  - No console errors
 
-This is a working reconstruction of the classic seven-question experience, not the original source code. The ocean, boat, pixel buddies, UI, and sounds are independently implemented. Animation curves, sounds, art details, aliases, and changing reference data may differ. Archive/themed packs, original player distributions, and paid features are outside this release. A title or screenshot similarity is not a claim of pixel-perfect equivalence.
+## Limitations
 
-Contributions and bug reports are welcome through this repository. Please avoid including credentials or private player data in issues.
+- The answer banks are hand-written. Real Krillion uses crowd data, so tiers for ordinary answers are judgment calls. Edit them freely.
+- Answers that aren't in a bank score as Schooler by default, so a typo of an ordinary answer might score instead of being corrected. Set `GAME.unlisted.tier` to `null` for strict original behaviour.
+- The streak, logbook and wardrobe features from OpenKrillion still work, but they only use this browser's local storage.
+- This is an independent, Krillion-inspired fork and isn't affiliated with krillion.io. Keep the `LICENSE` file when you share the code.
